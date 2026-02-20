@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Universal Descent | 4K SPACE EXPLORER</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            user-select: none;
+            z-index: 100;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type=range] {
+            flex-grow: 1;
+            accent-color: #ff3e3e;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .era-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00d4ff;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+        }
+
+        #time-display {
+            font-family: 'Courier New', monospace;
+            color: #ff9d00;
+        }
+
+        #help {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8em;
+        }
+
+        #target-hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #00d4ff;
+            font-size: 0.9em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #big-bang-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1000;
+        }
+
+        #codex {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            font-size: 0.9em;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 110;
+            transition: transform 0.4s ease;
+        }
+
+        #codex h3 {
+            color: #00d4ff;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        #codex .fact-card {
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        #codex .fact-card:last-child {
+            border-bottom: none;
+        }
+
+        .physics-label {
+            color: #ff9d00;
+            font-weight: bold;
+            font-size: 0.8em;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        #zoom-controls {
+            position: absolute;
+            right: 20px;
+            top: 55%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 8px;
+            border-radius: 40px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #zoom-slider {
+            appearance: slider-vertical;
+            width: 10px;
+            height: 180px;
+            cursor: pointer;
+            background: #333;
+            outline: none;
+        }
+
+        #zoom-controls span {
+            font-size: 1.5em;
+            color: #00d4ff;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+
+        #zoom-controls span:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="big-bang-flash"></div>
+    <div id="target-hud">
+        <div style="color: #00d4ff; font-weight: bold; margin-bottom: 5px; letter-spacing: 1px;">COSMIC DATA</div>
+        <div id="target-name" style="font-size: 1.25em; font-weight: bold; color: #fff;">Scanning...</div>
+        <div id="target-type" style="font-size: 0.8em; opacity: 0.8; margin-bottom: 10px; color: #00d4ff;">TYPE: UNKNOWN
+        </div>
+        <div id="target-fact" style="font-size: 0.9em; line-height: 1.4; color: #ddd; margin-bottom: 8px;">Waiting for
+            signal...</div>
+        <div id="target-meta"
+            style="font-size: 0.75em; color: #888; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">[ NO
+            DATA ]</div>
+    </div>
+    <div id="codex">
+        <h3>COSMIC CODEX</h3>
+        <div id="codex-content">
+            <div class="fact-card">
+                <span class="physics-label">UNIVERSITY LAW #1: ENTROPY</span>
+                The second law of thermodynamics states that total entropy of an isolated system can never decrease over
+                time. The universe moves toward disorder.
+            </div>
+            <div class="fact-card">
+                <span class="physics-label">GRAVITY & SPACE-TIME</span>
+                Massive objects like Black Holes warp the fabric of space-time, creating "wells" that light even cannot
+                escape.
+            </div>
+        </div>
+    </div>
+    <div id="help">
+        Hover on Objects to Identify<br>
+        WASD to Fly | Click to Focus<br>
+        The Universe eventually resets (Cycle)
+    </div>
+    <div id="zoom-controls">
+        <span onclick="adjustZoom(-100)">+</span>
+        <input type="range" id="zoom-slider" min="5" max="3000" value="600" orient="vertical">
+        <span onclick="adjustZoom(100)">−</span>
+    </div>
+    <div id="ui">
+        <div class="controls">
+            <div id="era" class="era-title">Stellar Era</div>
+            <div class="stats">
+                <span>Timeline Expansion</span>
+                <span id="time-display">0 Years</span>
+            </div>
+            <div class="slider-container">
+                <input type="range" id="time-slider" min="0" max="1" step="0.0001" value="0">
+            </div>
+            <div class="stats">
+                <span>Entropy</span>
+                <span id="entropy-display">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+        // --- 4K Config & State ---
+        const STAR_COUNT = 550000;
+        const NEBULA_COUNT = 2500;
+        const GALAXY_PARTICLES = 40000;
+        const state = {
+            t: 0, entropy: 0, expansion: 1, era: "Stellar Era",
+            focusTarget: null, targetCamDist: 400, currentCamDist: 400,
+            lookAtPos: new THREE.Vector3(0, 0, 0),
+            lerpSpeed: 0.03,
+            isBouncing: false, bounceTime: 0
+        };
+
+        // --- Shaders ---
+        const starVertexShader = `
+            attribute float aSize;
+            attribute vec3 aColor;
+            uniform float uExpansion;
+            varying vec3 vColor;
+            varying float vAlpha;
+            void main() {
+                vec3 pos = position * uExpansion;
+                float dist = length(position);
+                float expandedDist = dist * uExpansion;
+                float redshift = clamp((uExpansion - 1.0) * dist * 0.012, 0.0, 1.0);
+                vColor = mix(aColor, vec3(1.0, 0.08, 0.0), redshift);
+                float fade = 1.0 / (1.0 + pow(expandedDist * 0.0004, 2.0));
+                vAlpha = clamp(fade, 0.1, 1.0);
+                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                gl_PointSize = aSize * (500.0 / -mvPosition.z) * fade;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+
+        const starFragmentShader = `
+            varying vec3 vColor;
+            varying float vAlpha;
+            uniform float uEntropy;
+            void main() {
+                float d = length(gl_PointCoord - vec2(0.5));
+                if (d > 0.5) discard;
+                float glow = exp(-d * 10.0);
+                gl_FragColor = vec4(vColor, glow * vAlpha * (1.0 - uEntropy));
+            }
+        `;
+
+        const sunFragmentShader = `
+            uniform float uTime;
+            uniform vec3 uColor;
+            varying vec3 vPosition;
+            varying vec3 vNormal;
+
+            float pulse(float edge0, float edge1, float x) {
+                return step(edge0, x) - step(edge1, x);
+            }
+
+            void main() {
+                // High-contrast boiling noise
+                float n = 0.0;
+                vec3 p = vPosition * 0.15 + vec3(0.0, 0.0, uTime * 0.2);
+                for(float i=1.0; i<4.0; i++) {
+                    p += sin(p.zxy * i + uTime * 0.5) * 0.5;
+                    n += length(cross(sin(p), cos(p.yzx))) / i;
+                }
+                
+                vec3 fire = mix(uColor, vec3(1.0, 0.2, 0.0), n * 0.4);
+                float rim = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
+                gl_FragColor = vec4(fire + rim * 0.8, 1.0);
+            }
+        `;
+
+        const blackHoleDiskShader = {
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vPos;
+                void main() {
+                    vUv = uv;
+                    vPos = position;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                varying vec2 vUv;
+                varying vec3 vPos;
+                
+                float noise(vec2 p) {
+                    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+                }
+
+                void main() {
+                    float r = length(vUv - 0.5);
+                    if (r < 0.15 || r > 0.5) discard;
+                    
+                    // Accretion disk noise
+                    float angle = atan(vUv.y - 0.5, vUv.x - 0.5);
+                    float d = r * 10.0 - uTime * 2.0 + angle * 2.0;
+                    float n = smoothstep(0.4, 0.6, sin(d) * 0.5 + 0.5);
+                    
+                    // High-fidelity glow
+                    vec3 col = mix(vec3(1.0, 0.6, 0.2), vec3(1.0, 0.2, 0.05), r * 2.0);
+                    float alpha = smoothstep(0.15, 0.2, r) * smoothstep(0.5, 0.4, r);
+                    gl_FragColor = vec4(col * (0.8 + n * 0.4), alpha * 1.5);
+                }
+            `
+        };
+
+        // --- Core Implementation ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 80000);
+        camera.position.set(0, 150, 600);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // --- NASA Environment (500k Stars) ---
+        const starPalette = [0x9db2ff, 0xa2c0ff, 0xffffff, 0xfff5f2, 0xffbb00, 0xff2200];
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(STAR_COUNT * 3);
+        const starCols = new Float32Array(STAR_COUNT * 3);
+        const starSize = new Float32Array(STAR_COUNT);
+        for (let i = 0; i < STAR_COUNT; i++) {
+            const r = 2000 + Math.random() * 25000;
+            const th = Math.random() * Math.PI * 2;
+            const ph = Math.acos(2 * Math.random() - 1);
+            starPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+            starPos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+            starPos[i * 3 + 2] = r * Math.cos(ph);
+            const c = new THREE.Color(starPalette[Math.floor(Math.random() * starPalette.length)]);
+            starCols[i * 3] = c.r; starCols[i * 3 + 1] = c.g; starCols[i * 3 + 2] = c.b;
+            starSize[i] = Math.random() * 1.2 + 0.5;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        starGeo.setAttribute('aColor', new THREE.BufferAttribute(starCols, 3));
+        starGeo.setAttribute('aSize', new THREE.BufferAttribute(starSize, 1));
+        const starMat = new THREE.ShaderMaterial({
+            vertexShader: starVertexShader, fragmentShader: starFragmentShader,
+            uniforms: { uExpansion: { value: 1.0 }, uEntropy: { value: 0.0 } },
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        scene.add(new THREE.Points(starGeo, starMat));
+
+        // --- 4K Galaxies ---
+        function createDetailedGalaxy(count, size, color, name) {
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+            const cols = new Float32Array(count * 3);
+            const sizes = new Float32Array(count);
+            for (let i = 0; i < count; i++) {
+                const r = Math.random() * size;
+                const angle = (r / size) * Math.PI * 8 + (Math.random() * 0.4);
+                pos[i * 3] = Math.cos(angle) * r + (Math.random() - 0.5) * (size - r) * 0.2;
+                pos[i * 3 + 2] = Math.sin(angle) * r + (Math.random() - 0.4) * (size - r) * 0.2;
+                pos[i * 3 + 1] = (Math.random() - 0.5) * (size - r) * 0.1;
+                const c = new THREE.Color(color).lerp(new THREE.Color(0xffffff), Math.random() * 0.5);
+                cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
+                sizes[i] = Math.random() * 1.5 + 0.5;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('aColor', new THREE.BufferAttribute(cols, 3));
+            geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+            const points = new THREE.Points(geo, starMat.clone());
+            points.userData = {
+                type: 'galaxy',
+                name: name,
+                fact: "Galaxies are vast systems of stars, gas, and dark matter held together by gravity. Most have supermassive black holes at their centers."
+            };
+            return points;
+        }
+        const mw = createDetailedGalaxy(GALAXY_PARTICLES, 180, 0x88ccff, "Milky Way Galaxy");
+        const andromeda = createDetailedGalaxy(GALAXY_PARTICLES, 200, 0xffcc88, "Andromeda Galaxy");
+        scene.add(mw); scene.add(andromeda);
+
+        // --- High Fidelity Planets (Procedural 4K) ---
+        const planetVertexShader = `
+            varying vec3 vPos;
+            varying vec3 vNormal;
+            void main() {
+                vPos = position;
+                vNormal = normalize(normalMatrix * normal);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+        const planetFragmentShader = `
+            uniform vec3 uColor;
+            uniform float uSeed;
+            varying vec3 vPos;
+            varying vec3 vNormal;
+            
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec3 v) {
+                const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+                const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+                vec3 i = floor(v + dot(v, C.yyy));
+                vec3 x0 = v - i + dot(i, C.xxx);
+                vec3 g = step(x0.yzx, x0.xyz);
+                vec3 l = 1.0 - g;
+                vec3 i1 = min(g.xyz, l.zxy);
+                vec3 i2 = max(g.xyz, l.zxy);
+                vec3 x1 = x0 - i1 + C.xxx;
+                vec3 x2 = x0 - i2 + C.yyy;
+                vec3 x3 = x0 - D.yyy;
+                i = mod289(i);
+                vec4 p = permute(permute(permute(i.z+vec4(0,i1.z,i2.z,1))+i.y+vec4(0,i1.y,i2.y,1))+i.x+vec4(0,i1.x,i2.x,1));
+                vec4 j = p-49.0*floor(p*(1.0/49.0)*(1.0/49.0));
+                vec4 x_ = floor(j*(1.0/7.0));
+                vec4 y_ = floor(j-7.0*x_);
+                vec4 x = x_*(1.0/7.0)+0.5/7.0;
+                vec4 y = y_*(1.0/7.0)+0.5/7.0;
+                vec4 h = 1.0 - abs(x) - abs(y);
+                vec4 b0 = vec4(x.xy,y.xy); vec4 b1 = vec4(x.zw,y.zw);
+                vec4 s0 = floor(b0)*2.0+1.0; vec4 s1 = floor(b1)*2.0+1.0;
+                vec4 sh = -step(h, vec4(0.0));
+                vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+                vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+                vec4 norm = 1.79284291400159 - 0.85373472095314 * vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3));
+                p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+                vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+                return 42.0*dot(m*m*m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+            }
+
+            void main() {
+                float n = snoise(vPos * 2.0 + uSeed);
+                n += 0.5 * snoise(vPos * 4.0 - uSeed);
+                n += 0.25 * snoise(vPos * 8.0 + uSeed);
+                
+                // Add banding effect for Gas Giants
+                float banding = 1.0;
+                if (uSeed > 500.0) { // Jupiter/Saturn/Neptune seed range
+                    banding = 0.8 + 0.4 * sin(vPos.y * 30.0 + snoise(vPos * 3.0) * 5.0);
+                }
+                
+                vec3 color = mix(uColor * 0.4, uColor * 1.3, n * 0.5 + 0.5) * banding;
+                float rim = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
+                gl_FragColor = vec4(color + rim * 0.25, 1.0);
+            }
+        `;
+
+        const saturnRingShader = {
+            vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `
+                varying vec2 vUv;
+                void main() {
+                    float d = length(vUv - 0.5);
+                    if (d < 0.25 || d > 0.5) discard;
+                    float ring = sin(d * 100.0) * 0.5 + 0.5;
+                    gl_FragColor = vec4(0.8, 0.7, 0.5, (0.4 + ring * 0.3) * smoothstep(0.25, 0.3, d) * smoothstep(0.5, 0.45, d));
+                }
+            `
+        };
+
+        // --- High Fidelity Planets (Procedural 4K) ---
+        const planetList = [];
+        const planetConfigs = [
+            { name: "Mercury", dist: 45, size: 0.9, color: new THREE.Color(0x888888), tilt: 0.1, rotSpeed: 0.047, fact: "The smallest planet. It has no atmosphere to retain heat, leading to extreme temperature swings." },
+            { name: "Venus", dist: 75, size: 2.3, color: new THREE.Color(0xeebb33), tilt: 177, rotSpeed: 0.035, fact: "The hottest planet in our solar system due to a runaway greenhouse effect." },
+            { name: "Earth", dist: 110, size: 2.5, color: new THREE.Color(0x2255ff), tilt: 23.5, rotSpeed: 0.03, fact: "The only planet known to harbor life. Its atmosphere is 21% oxygen." },
+            { name: "Mars", dist: 160, size: 1.3, color: new THREE.Color(0xff4422), tilt: 25.2, rotSpeed: 0.024, fact: "Home to Olympus Mons, the largest volcano in the solar system." },
+            { name: "Jupiter", dist: 380, size: 8, color: new THREE.Color(0xddaabb), tilt: 3.1, rotSpeed: 0.015, fact: "A gas giant twice as massive as all other planets combined.", seedOffset: 600 },
+            { name: "Saturn", dist: 600, size: 7, color: new THREE.Color(0xeebb88), tilt: 26.7, rotSpeed: 0.012, fact: "Famous for its stunning ring system made of ice and rock.", seedOffset: 700, hasRings: true },
+            { name: "Uranus", dist: 900, size: 3.5, color: new THREE.Color(0x88ddff), tilt: 97.8, rotSpeed: 0.01, fact: "An ice giant that orbits the Sun on its side.", seedOffset: 750 },
+            { name: "Neptune", dist: 1200, size: 3.5, color: new THREE.Color(0x2244ff), tilt: 28.3, rotSpeed: 0.009, fact: "The windiest planet, with gusts reaching over 2,000 kilometers per hour.", seedOffset: 800 }
+        ];
+
+        planetConfigs.forEach(conf => {
+            const group = new THREE.Group();
+            const mat = new THREE.ShaderMaterial({
+                uniforms: { uColor: { value: conf.color }, uSeed: { value: (conf.seedOffset || 0) + Math.random() * 100 } },
+                vertexShader: planetVertexShader, fragmentShader: planetFragmentShader
+            });
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(conf.size, 128, 128), mat);
+            mesh.rotation.z = THREE.MathUtils.degToRad(conf.tilt);
+            mesh.userData = { type: 'planet', name: conf.name, fact: conf.fact };
+            group.add(mesh);
+
+            if (conf.hasRings) {
+                const ringGeo = new THREE.PlaneGeometry(conf.size * 4.5, conf.size * 4.5);
+                const ringMat = new THREE.ShaderMaterial({
+                    vertexShader: saturnRingShader.vertexShader,
+                    fragmentShader: saturnRingShader.fragmentShader,
+                    transparent: true, side: THREE.DoubleSide
+                });
+                const rings = new THREE.Mesh(ringGeo, ringMat);
+                rings.rotation.x = Math.PI * 0.5;
+                group.add(rings);
+            }
+
+            // The Moon for Earth
+            if (conf.name === "Earth") {
+                const moonGroup = new THREE.Group();
+                const moonMat = new THREE.ShaderMaterial({
+                    uniforms: { uColor: { value: new THREE.Color(0xaaaaaa) }, uSeed: { value: 42 } },
+                    vertexShader: planetVertexShader, fragmentShader: planetFragmentShader
+                });
+                const moon = new THREE.Mesh(new THREE.SphereGeometry(conf.size * 0.27, 64, 64), moonMat);
+                moon.userData = { type: 'moon', name: "The Moon", fact: "Earth's only natural satellite. It stabilizes our planet's wobble, moderating the climate." };
+                moon.position.set(conf.size * 4, 0, 0); // Approx distance
+                moonGroup.add(moon);
+                group.add(moonGroup);
+                planetList.push({ group: moonGroup, mesh: moon, conf: { rotSpeed: 0.04 }, angle: 0, isMoon: true, parentGroup: group });
+            }
+
+            const glow = new THREE.Mesh(new THREE.SphereGeometry(conf.size * 1.15, 64, 64),
+                new THREE.ShaderMaterial({
+                    vertexShader: `varying vec3 vN; void main() { vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                    fragmentShader: `varying vec3 vN; void main() { float r = pow(1.0 - max(dot(vN, vec3(0,0,1)), 0.0), 4.0); gl_FragColor = vec4(0.4, 0.7, 1.0, r * 0.6); }`,
+                    transparent: true, blending: THREE.AdditiveBlending, side: THREE.BackSide
+                })
+            );
+            group.add(glow);
+            scene.add(group);
+            planetList.push({ group, mesh, conf, angle: Math.random() * Math.PI * 2 });
+        });
+
+        // --- The High-Fidelity Black Hole ---
+        const bhGroup = new THREE.Group();
+        const singularity = new THREE.Mesh(
+            new THREE.SphereGeometry(8, 64, 64),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        bhGroup.add(singularity);
+
+        const diskGeo = new THREE.PlaneGeometry(80, 80);
+        const diskMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 } },
+            vertexShader: blackHoleDiskShader.vertexShader,
+            fragmentShader: blackHoleDiskShader.fragmentShader,
+            transparent: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+        });
+        const disk = new THREE.Mesh(diskGeo, diskMat);
+        disk.rotation.x = Math.PI * 0.45;
+        bhGroup.add(disk);
+
+        const lensing = new THREE.Mesh(
+            new THREE.SphereGeometry(12, 64, 64),
+            new THREE.ShaderMaterial({
+                vertexShader: `varying vec3 vN; void main() { vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                fragmentShader: `varying vec3 vN; void main() { float r = pow(1.0 - max(dot(vN, vec3(0,0,1)), 0.0), 3.0); gl_FragColor = vec4(1.0, 1.0, 1.0, r * 0.4); }`,
+                transparent: true, blending: THREE.AdditiveBlending
+            })
+        );
+        bhGroup.add(lensing);
+        bhGroup.userData = {
+            type: 'blackhole',
+            name: "Sagittarius A*",
+            fact: "A supermassive singularity. Gravity is so strong here that nothing, not even light, can escape."
+        };
+        scene.add(bhGroup);
+
+        // --- The High-Fidelity Sun ---
+        const sunGroup = new THREE.Group();
+        const sunMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0xffaa00) } },
+            vertexShader: `varying vec3 vPosition; varying vec3 vNormal; void main() { vPosition = position; vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: sunFragmentShader
+        });
+        const sun = new THREE.Mesh(new THREE.SphereGeometry(30, 128, 128), sunMat);
+        sun.userData = {
+            type: 'sun',
+            name: "The Sun",
+            fact: "A G-type main-sequence star. It contains 99.8% of the Solar System's total mass."
+        };
+        sunGroup.add(sun);
+        sunGroup.position.set(1200, 0, 0); // Put the sun in a real local system
+        scene.add(sunGroup);
+
+        const light = new THREE.PointLight(0xffffff, 3, 5000);
+        light.position.set(1200, 0, 0);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x101010));
+
+        // --- Interaction Logic (Hover based) ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const targetHud = document.getElementById('target-hud');
+        const targetNameUpdate = document.getElementById('target-name');
+        const targetTypeUpdate = document.getElementById('target-type');
+        const targetFactUpdate = document.getElementById('target-fact');
+        const targetMetaUpdate = document.getElementById('target-meta');
+
+        window.addEventListener('mousemove', (e) => {
+            if (state.isBouncing) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if (state.isBouncing) return;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && !obj.userData.type) obj = obj.parent;
+                if (obj.userData.type) {
+                    state.focusTarget = obj;
+                    if (obj.userData.type === 'planet' || obj.userData.type === 'moon') state.targetCamDist = 15;
+                    else if (obj.userData.type === 'sun') state.targetCamDist = 120;
+                    else if (obj.userData.type === 'blackhole') state.targetCamDist = 200;
+                    else state.targetCamDist = 400;
+
+                    // Sync zoom slider
+                    document.getElementById('zoom-slider').value = state.targetCamDist;
+                }
+            } else {
+                state.focusTarget = null;
+                state.targetCamDist = 800;
+            }
+        });
+
+        function updateHover() {
+            if (state.isBouncing) return;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && !obj.userData.type) obj = obj.parent;
+                if (obj.userData.type) {
+                    targetHud.style.opacity = 1;
+                    targetNameUpdate.innerText = obj.userData.name;
+                    targetTypeUpdate.innerText = "TYPE: " + obj.userData.type.toUpperCase();
+                    targetFactUpdate.innerText = obj.userData.fact || "Scanning cosmic signature...";
+
+                    // Add meta info if available
+                    if (obj.userData.name === "Jupiter") targetMetaUpdate.innerText = "Diameter: 139,820 km | Day: 9.9 hrs";
+                    else if (obj.userData.name === "Saturn") targetMetaUpdate.innerText = "Diameter: 116,460 km | Day: 10.7 hrs";
+                    else if (obj.userData.name === "Earth") targetMetaUpdate.innerText = "Diameter: 12,742 km | Day: 24 hrs";
+                    else if (obj.userData.name === "Mars") targetMetaUpdate.innerText = "Diameter: 6,779 km | Day: 24.6 hrs";
+                    else if (obj.userData.name === "Venus") targetMetaUpdate.innerText = "Diameter: 12,104 km | Day: 2,802 hrs";
+                    else if (obj.userData.name === "Mercury") targetMetaUpdate.innerText = "Diameter: 4,879 km | Day: 1,408 hrs";
+                    else if (obj.userData.name === "Uranus") targetMetaUpdate.innerText = "Diameter: 50,724 km | Day: 17.2 hrs";
+                    else if (obj.userData.name === "Neptune") targetMetaUpdate.innerText = "Diameter: 49,244 km | Day: 16.1 hrs";
+                    else targetMetaUpdate.innerText = "[ NO SPECTRAL DATA ]";
+                }
+            } else {
+                targetHud.style.opacity = 0;
+            }
+        }
+
+        const timeSlider = document.getElementById('time-slider');
+        const eraDisplay = document.getElementById('era');
+        const timeDisplay = document.getElementById('time-display');
+
+        function updateState() {
+            if (state.isBouncing) return;
+            const e = state.t * 100;
+            if (state.t >= 0.999) {
+                triggerBigBounce();
+                return;
+            }
+            eraDisplay.innerText = e < 9 ? "Era of Life" : (e < 15 ? "Era of Dying Stars" : "Era of Entropy");
+            timeDisplay.innerText = e === 0 ? "Present" : "10^" + e.toFixed(1) + " Years";
+            state.entropy = Math.pow(state.t, 1.5);
+            starMat.uniforms.uEntropy.value = state.entropy;
+            starMat.uniforms.uExpansion.value = 1.0 + state.t * 60;
+
+            // Merger Physics around the Black Hole
+            const mFactor = 1.0 - Math.min(1.0, state.t / 0.15);
+            mw.position.set(-800 * mFactor, 0, 0);
+            andromeda.position.set(800 * mFactor, 0, 0);
+            mw.rotation.y = state.t * 8;
+            andromeda.rotation.y = -state.t * 9;
+
+            // Black Hole grows as merger concludes
+            const grow = 0.5 + Math.min(1.5, state.t * 5);
+            bhGroup.scale.set(grow, grow, grow);
+
+            // Solar system drift (Center it more for Era of Life)
+            sunGroup.position.x = 1000 - state.t * 3000;
+            light.position.copy(sunGroup.position);
+
+            updateCodex();
+        }
+
+        const codexContent = document.getElementById('codex-content');
+        function updateCodex() {
+            const e = state.t * 100;
+            let html = '';
+            if (e < 9) {
+                html = `
+                    <div class="fact-card"><span class="physics-label">UNIVERSITY LAW: ENTROPY</span>Entropy is low. Stars are born from vast gas clouds, forming galaxies and planets capable of supporting life.</div>
+                    <div class="fact-card"><span class="physics-label">GRAVITY</span>Planets orbit stars due to gravitational attraction, a fundamental law discovered by Newton and refined by Einstein.</div>
+                `;
+            } else if (e < 15) {
+                html = `
+                    <div class="fact-card"><span class="physics-label">STARS DYING</span>The 'Era of Dying Stars'. Most stars have exhausted their nuclear fuel, becoming White Dwarfs or Black Holes.</div>
+                    <div class="fact-card"><span class="physics-label">GALAXY MERGER</span>Galaxies collide as gravity pulls them together, eventually merging into 'Milkomeda'.</div>
+                `;
+            } else {
+                html = `
+                    <div class="fact-card"><span class="physics-label">HEAT DEATH</span>The maximum entropy state. Energy is spread so thin that no further work can be performed. The universe enters a long dark decay.</div>
+                    <div class="fact-card"><span class="physics-label">SINGULARITY</span>Everything will eventually be swallowed by black holes, which will then slowly evaporate via Hawking Radiation.</div>
+                `;
+            }
+            codexContent.innerHTML = html;
+        }
+
+        timeSlider.addEventListener('input', (e) => { state.t = parseFloat(e.target.value); updateState(); });
+
+        // --- WASD Movement ---
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        function updateNavigation() {
+            const speed = 3.0;
+            const forward = new THREE.Vector3(0, 0, -speed).applyQuaternion(camera.quaternion);
+            const right = new THREE.Vector3(speed, 0, 0).applyQuaternion(camera.quaternion);
+            if (keys['KeyW']) controls.target.add(forward);
+            if (keys['KeyS']) controls.target.add(forward.clone().negate());
+            if (keys['KeyA']) controls.target.add(right.clone().negate());
+            if (keys['KeyD']) controls.target.add(right);
+            if (keys['KeyE']) controls.target.y += speed;
+            if (keys['KeyQ']) controls.target.y -= speed;
+
+            // Slow cinematic rotation if no keys pressed
+            if (!keys['KeyW'] && !keys['KeyS'] && !keys['KeyA'] && !keys['KeyD']) {
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 0.5;
+            } else {
+                controls.autoRotate = false;
+            }
+        }
+
+        // --- Big Bounce Transition ---
+        const flashOverlay = document.getElementById('big-bang-flash');
+        function triggerBigBounce() {
+            state.isBouncing = true;
+            state.bounceTime = 0;
+        }
+
+        function handleBigBounce(dt) {
+            state.bounceTime += dt;
+
+            // Shrink phase
+            if (state.bounceTime < 2) {
+                const shrink = 1.0 - (state.bounceTime / 2);
+                scene.scale.set(shrink, shrink, shrink);
+                flashOverlay.style.opacity = Math.pow(state.bounceTime / 2, 4);
+            }
+            // Reset and Rebirth
+            else if (state.bounceTime < 4) {
+                if (state.t !== 0) {
+                    state.t = 0;
+                    state.focusTarget = null;
+                    timeSlider.value = 0;
+                    updateState();
+                    scene.scale.set(1, 1, 1);
+                }
+                const fade = 1.0 - ((state.bounceTime - 2) / 2);
+                flashOverlay.style.opacity = fade;
+            } else {
+                state.isBouncing = false;
+                flashOverlay.style.opacity = 0;
+            }
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now() * 0.001;
+            const dt = 0.016; // Approx
+
+            if (state.isBouncing) {
+                handleBigBounce(dt);
+            }
+
+            sunMat.uniforms.uTime.value = time;
+            diskMat.uniforms.uTime.value = time;
+
+            updateNavigation();
+
+            // Realistic Motion
+            planetList.forEach(p => {
+                if (p.isMoon) {
+                    p.angle += p.conf.rotSpeed;
+                    p.group.rotation.y = p.angle;
+                } else {
+                    p.angle += p.conf.rotSpeed * (1 + state.expansion * 0.001);
+                    p.group.position.set(Math.cos(p.angle) * p.conf.dist, 0, Math.sin(p.angle) * p.conf.dist);
+                    p.mesh.rotation.y += 0.01; // Axial rotation
+                }
+            });
+
+            updateHover();
+
+            // Camera Focus Lerp
+            if (state.focusTarget) {
+                const targetPos = new THREE.Vector3();
+                state.focusTarget.getWorldPosition(targetPos);
+                state.lookAtPos.lerp(targetPos, state.lerpSpeed);
+                controls.target.copy(state.lookAtPos);
+            } else {
+                // If no focus target, don't force snap back to origin if user moved away
+                // state.lookAtPos.lerp(new THREE.Vector3(0, 0, 0), state.lerpSpeed);
+                // controls.target.copy(state.lookAtPos);
+            }
+
+            state.currentCamDist += (state.targetCamDist - state.currentCamDist) * state.lerpSpeed;
+
+            // Constrain camera position to the current lerped distance
+            const camVec = camera.position.clone().sub(controls.target);
+            if (camVec.length() > 0.001) {
+                camVec.setLength(state.currentCamDist);
+                camera.position.copy(controls.target).add(camVec);
+            }
+
+            controls.update();
+            composer.render();
+        }
+
+        // --- Zoom Helpers ---
+        const zoomSlider = document.getElementById('zoom-slider');
+        zoomSlider.addEventListener('input', (e) => {
+            state.targetCamDist = parseFloat(e.target.value);
+        });
+
+        window.adjustZoom = (delta) => {
+            state.targetCamDist = Math.max(5, Math.min(3000, state.targetCamDist + delta));
+            zoomSlider.value = state.targetCamDist;
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '=' || e.key === '+') adjustZoom(-50);
+            if (e.key === '-' || e.key === '_') adjustZoom(50);
+        });
+
+        // --- Post-Processing ---
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        // Refined Bloom to prevent "bright square" glitch
+        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.9);
+        composer.addPass(bloom);
+        composer.addPass(new OutputPass());
+
+        updateState();
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>

@@ -328,7 +328,8 @@
             t: 0, entropy: 0, expansion: 1, era: "Stellar Era",
             focusTarget: null, targetCamDist: 400, currentCamDist: 400,
             lookAtPos: new THREE.Vector3(0, 0, 0),
-            lerpSpeed: 0.03,
+            lerpSpeed: 0.03, targetLerpSpeed: 0.03,
+            timeFactor: 1.0, targetTimeFactor: 1.0,
             isBouncing: false, bounceTime: 0
         };
 
@@ -899,15 +900,22 @@
 
             updateNavigation();
 
+            // Cinematic Time Dilation (Lerp timeFactor and lerpSpeed)
+            state.targetTimeFactor = state.focusTarget ? 0.05 : 1.0;
+            state.targetLerpSpeed = state.focusTarget ? 0.015 : 0.05;
+            state.timeFactor += (state.targetTimeFactor - state.timeFactor) * 0.05;
+            state.lerpSpeed += (state.targetLerpSpeed - state.lerpSpeed) * 0.05;
+
             // Realistic Motion
             planetList.forEach(p => {
+                const rot = p.conf.rotSpeed * state.timeFactor;
                 if (p.isMoon) {
-                    p.angle += p.conf.rotSpeed;
+                    p.angle += rot * 1.5; // Moons move relative to speed
                     p.group.rotation.y = p.angle;
                 } else {
-                    p.angle += p.conf.rotSpeed * (1 + state.expansion * 0.001);
+                    p.angle += rot * (1 + state.expansion * 0.001);
                     p.group.position.set(Math.cos(p.angle) * p.conf.dist, 0, Math.sin(p.angle) * p.conf.dist);
-                    p.mesh.rotation.y += 0.01; // Axial rotation
+                    p.mesh.rotation.y += 0.01 * state.timeFactor; // Axial rotation slows too
                 }
             });
 
